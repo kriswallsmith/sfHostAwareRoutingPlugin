@@ -25,11 +25,13 @@ class sfHostAwareRoutingConfigHandler extends sfRoutingConfigHandler
    */
   protected function filterRoute($route)
   {
-    if (isset($route['class']) && ('sfHostAwareRoute' == $route['class'] || is_subclass_of($route['class'], 'sfHostAwareRoute')))
+    list($class, $args) = $route;
+
+    if ('sfHostAwareRoute' == $class || is_subclass_of($class, 'sfHostAwareRoute'))
     {
-      $route = array_merge($route, array('url' => $this->replaceConstants($route['url'])));
+      $args[0] = $this->replaceConstants($args[0]);
     }
 
-    return $route;
+    return array($class, $args);
   }
 }
