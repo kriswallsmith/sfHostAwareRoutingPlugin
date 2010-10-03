@@ -1,0 +1,3 @@
+config/routing.yml:
+  class: sfHostAwareRoutingConfigHandler
+  file: "<?php echo dirname(__FILE__) ?>/../lib/sfHostAwareRoutingConfigHandler.class.php"
