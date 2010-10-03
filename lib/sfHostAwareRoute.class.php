@@ -14,16 +14,13 @@
  */
 class sfHostAwareRoute extends sfRequestRoute
 {
-  protected
-    $hostRoute = null;
-
   public function __construct($pattern, array $defaults = array(), array $requirements = array(), array $options = array())
   {
     if ('/' != $pattern[0])
     {
       list($host, $pattern) = explode('/', $pattern, 2);
 
-      $this->hostRoute = $this->createHostRoute($host, $defaults, $requirements, $options);
+      $options['host_route'] = $this->createHostRoute($host, $defaults, $requirements, $options);
     }
 
     parent::__construct($pattern, $defaults, $requirements, $options);
@@ -37,9 +34,9 @@ class sfHostAwareRoute extends sfRequestRoute
       return false;
     }
 
-    if ($this->hostRoute)
+    if (isset($this->options['host_route']))
     {
-      if (false === $hostParameters = $this->hostRoute->matchesUrl('/'.$context['host'], $context))
+      if (false === $hostParameters = $this->options['host_route']->matchesUrl('/'.$context['host'], $context))
       {
         // host does not match
         return false;
@@ -53,19 +50,19 @@ class sfHostAwareRoute extends sfRequestRoute
 
   public function matchesParameters($params, $context = array())
   {
-    if (!$this->hostRoute)
+    if (!isset($this->options['host_route']))
     {
       return parent::matchesParameters($params, $context);
     }
 
     $hostParams = $this->extractHostParams($params);
 
-    return parent::matchesParameters($params, $context) && $this->hostRoute->matchesParameters($hostParams, $context);
+    return parent::matchesParameters($params, $context) && $this->options['host_route']->matchesParameters($hostParams, $context);
   }
 
   public function generate($params, $context = array(), $absolute = false)
   {
-    if (!$this->hostRoute)
+    if (!isset($this->options['host_route']))
     {
       return parent::generate($params, $context, $absolute);
     }
@@ -73,11 +70,16 @@ class sfHostAwareRoute extends sfRequestRoute
     $hostParams = $this->extractHostParams($params);
 
     $protocol = isset($context['is_secure']) && $context['is_secure'] ? 'https' : 'http';
-    $host = $this->hostRoute->generate($hostParams, $context, false);
+    $host = $this->options['host_route']->generate($hostParams, $context, false);
     $prefix = isset($context['prefix']) ? $context['prefix'] : '';
     $uri = parent::generate($params, $context, false);
 
     return $protocol.':/'.$host.$prefix.$uri;
+  }
+
+  public function getHostRoute()
+  {
+    return isset($this->options['host_route']) ? $this->options['host_route'] : null;
   }
 
   protected function createHostRoute($pattern, $defaults, $requirements, $options)
@@ -107,7 +109,7 @@ class sfHostAwareRoute extends sfRequestRoute
   protected function extractHostParams(& $params)
   {
     $hostParams = array();
-    foreach (array_keys($this->hostRoute->getVariables()) as $name)
+    foreach (array_keys($this->options['host_route']->getVariables()) as $name)
     {
       if (isset($params[$name]))
       {

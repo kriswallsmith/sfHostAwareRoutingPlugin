@@ -16,11 +16,7 @@ class sfHostAwareRouteTest extends PHPUnit_Framework_TestCase
       'action' => 'showSection',
     ));
 
-    $r = new ReflectionObject($route);
-    $p = $r->getProperty('hostRoute');
-    $p->setAccessible(true);
-
-    $this->assertInstanceOf('sfRoute', $p->getValue($route));
+    $this->assertInstanceOf('sfRoute', $route->getHostRoute());
 
     return $route;
   }
@@ -119,11 +115,7 @@ class sfHostAwareRouteTest extends PHPUnit_Framework_TestCase
       'action' => 'showSection',
     ));
 
-    $r = new ReflectionObject($route);
-    $p = $r->getProperty('hostRoute');
-    $p->setAccessible(true);
-
-    $this->assertSame(null, $p->getValue($route));
+    $this->assertSame(null, $route->getHostRoute());
 
     return $route;
   }
@@ -167,5 +159,18 @@ class sfHostAwareRouteTest extends PHPUnit_Framework_TestCase
       'module' => 'dashboard',
       'action' => 'showSection',
     )));
+  }
+
+  /**
+   * @depends testHostRoute
+   */
+  public function testSerialization($route)
+  {
+    $serialized = serialize($route);
+    unset($route);
+
+    $route = unserialize($serialized);
+
+    $this->assertInstanceOf('sfRoute', $route->getHostRoute());
   }
 }
